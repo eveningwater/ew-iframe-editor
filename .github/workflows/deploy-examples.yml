@@ -27,12 +27,14 @@ jobs:
 
       - run: pnpm build
 
-      # 站点结构：examples 平铺到根目录，dist 保持同级相对路径（HTML 里引用 ../dist/）
+      # 站点结构保持与本地开发一致：examples/ 与 dist/ 同级，
+      # HTML 里的 ../dist/index.global.js 相对引用才能正确解析
       - name: Prepare site
         run: |
           mkdir -p .gh-pages
-          cp -r examples/* .gh-pages/
+          cp -r examples .gh-pages/examples
           cp -r dist .gh-pages/dist
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=./examples/"><title>ew-iframe-editor</title></head></html>' > .gh-pages/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

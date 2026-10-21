@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ew-iframe-editor 示例</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .header {
+      padding: 16px 24px;
+      background: #1e1e1e;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tab {
+      padding: 6px 16px;
+      border: 1px solid #555;
+      border-radius: 6px;
+      background: transparent;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .tab:hover { background: #333; color: #fff; }
+    .tab.active { background: #007acc; border-color: #007acc; color: #fff; }
+    .container {
+      height: calc(100vh - 57px);
+      display: flex;
+    }
+    #editor-host {
+      flex: 1;
+      height: 100%;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .modal h2 { font-size: 18px; margin-bottom: 12px; color: #333; }
+    .modal p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 16px; }
+    .modal a { color: #007acc; text-decoration: none; }
+    .modal a:hover { text-decoration: underline; }
+    .modal label { display: block; font-size: 14px; color: #333; margin-bottom: 6px; font-weight: 500; }
+    .modal input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      outline: none;
+    }
+    .modal input:focus { border-color: #007acc; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-actions button {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-cancel { background: #eee; color: #333; }
+    .btn-cancel:hover { background: #ddd; }
+    .btn-confirm { background: #007acc; color: #fff; }
+    .btn-confirm:hover { background: #005a9e; }
+    .hint { font-size: 12px; color: #999; margin-top: -12px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>ew-iframe-editor</h1>
+    <div class="tabs">
+      <button class="tab active" data-editor="ew">ew-code-editor（requestUrl）</button>
+      <button class="tab" data-editor="direct">直接传入代码</button>
+      <button class="tab" data-editor="onecompiler">OneCompiler（自定义适配器）</button>
+      <button class="tab" data-editor="jdoodle">JDoodle（自定义适配器）</button>
+    </div>
+  </div>
+  <div class="container">
+    <div id="editor-host"></div>
+  </div>
+
+  <!-- JDoodle Key 输入弹框 -->
+  <div class="modal-overlay" id="jdoodle-modal">
+    <div class="modal">
+      <h2>输入 JDoodle Embed Key</h2>
+      <p>
+        JDoodle 需要先创建 embed 获取 key，免费版每天可执行 20 次代码。<br />
+        👉 <a href="https://www.jdoodle.com/embed-ides" target="_blank">去 JDoodle 创建 Embed</a>
+      </p>
+      <label for="jdoodle-key">Embed Key</label>
+      <input type="text" id="jdoodle-key" placeholder="输入你的 embed key" />
+      <p class="hint">key 会保存在 localStorage，下次无需重复输入</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="jdoodle-cancel">取消</button>
+        <button class="btn-confirm" id="jdoodle-confirm">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../dist/index.global.js"></script>
+  <script>
+    const { createEditor, ewCodeEditorAdapter } = EwIframeEditor;
+
+    const tabs = document.querySelectorAll('.tab');
+    const modal = document.getElementById('jdoodle-modal');
+    const keyInput = document.getElementById('jdoodle-key');
+
+    function destroyCurrent() {
+      const iframe = document.getElementById('ew-code-editor-iframe');
+      const style = document.getElementById('ew-code-editor-style');
+      if (iframe) iframe.remove();
+      if (style) style.remove();
+    }
+
+    function loadJDoodle() {
+      const savedKey = localStorage.getItem('jdoodle-embed-key');
+      if (savedKey) {
+        loadJDoodleEditor(savedKey);
+      } else {
+        modal.classList.add('show');
+        keyInput.value = '';
+        keyInput.focus();
+      }
+    }
+
+    function loadJDoodleEditor(embedKey) {
+      createEditor({
+        container: '#editor-host',
+        adapter: {
+          name: 'jdoodle',
+          usesPostMessage: true,
+          getUrl() {
+            return `https://www.jdoodle.com/embed/v1/${embedKey}`;
+          },
+          sendCode(iframe, code) {
+            iframe.contentWindow?.postMessage({
+              command: 'setCode',
+              script: code.js || '',
+            }, '*');
+          },
+        },
+        code: {
+          js: `// JDoodle 自定义适配器示例
+function greet(name) {
+  return 'Hello, ' + name + '!';
+}
+console.log(greet('JDoodle'));`,
+        },
+      });
+    }
+
+    function loadEditor(type) {
+      destroyCurrent();
+
+      switch (type) {
+        case 'ew':
+          createEditor({
+            container: '#editor-host',
+            adapter: ewCodeEditorAdapter(),
+            requestUrl: './demo.html',
+          });
+          break;
+        case 'direct':
+          createEditor({
+            container: '#editor-host',
+            adapter: ewCodeEditorAdapter(),
+            code: {
+              html: '<h1 style="color:red">直接传入代码</h1><button id="btn">点击我</button>',
+              css: 'body { font-family: sans-serif; text-align: center; padding: 40px; } button { padding: 12px 24px; font-size: 16px; cursor: pointer; }',
+              js: 'document.getElementById("btn").addEventListener("click", () => alert("Hello ew-iframe-editor!"));',
+            },
+          });
+          break;
+        case 'onecompiler':
+          createEditor({
+            container: '#editor-host',
+            adapter: {
+              name: 'onecompiler',
+              usesPostMessage: true,
+              getUrl() {
+                return 'https://onecompiler.com/embed/javascript?listenToEvents=true&hideNew=true&hideTitle=true';
+              },
+              sendCode(iframe, code) {
+                iframe.contentWindow?.postMessage({
+                  eventType: 'populateCode',
+                  language: 'javascript',
+                  files: [{ name: 'index.js', content: code.js }],
+                }, '*');
+              },
+            },
+            code: {
+              js: `// OneCompiler 自定义适配器示例
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+console.log('Fibonacci(10):', fibonacci(10));`,
+            },
+          });
+          break;
+        case 'jdoodle':
+          loadJDoodle();
+          break;
+      }
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        loadEditor(tab.dataset.editor);
+      });
+    });
+
+    // JDoodle 弹框交互
+    document.getElementById('jdoodle-confirm').addEventListener('click', () => {
+      const key = keyInput.value.trim();
+      if (!key) {
+        keyInput.focus();
+        return;
+      }
+      localStorage.setItem('jdoodle-embed-key', key);
+      modal.classList.remove('show');
+      loadJDoodleEditor(key);
+    });
+
+    document.getElementById('jdoodle-cancel').addEventListener('click', () => {
+      modal.classList.remove('show');
+      // 切回第一个 tab
+      tabs[0].click();
+    });
+
+    keyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('jdoodle-confirm').click();
+      }
+    });
+
+    // 默认加载 ew-code-editor
+    loadEditor('ew');
+  </script>
+</body>
+</html>

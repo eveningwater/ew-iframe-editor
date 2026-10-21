@@ -25,7 +25,7 @@
     "type": "git",
     "url": "git+https://github.com/eveningwater/ew-iframe-editor.git"
   },
-  "homepage": "https://github.com/eveningwater/ew-iframe-editor#readme",
+  "homepage": "https://eveningwater.github.io/ew-iframe-editor/",
   "bugs": "https://github.com/eveningwater/ew-iframe-editor/issues",
   "publishConfig": {
     "access": "public"

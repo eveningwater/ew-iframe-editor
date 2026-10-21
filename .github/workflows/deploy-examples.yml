@@ -1,0 +1,39 @@
+name: Deploy Examples
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install
+
+      - run: pnpm build
+
+      # 站点结构：examples 平铺到根目录，dist 保持同级相对路径（HTML 里引用 ../dist/）
+      - name: Prepare site
+        run: |
+          mkdir -p .gh-pages
+          cp -r examples/* .gh-pages/
+          cp -r dist .gh-pages/dist
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .gh-pages

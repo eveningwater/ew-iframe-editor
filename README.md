@@ -2,6 +2,8 @@
 
 通用代码编辑器嵌入 SDK，通过**适配器模式**将在线代码编辑器（默认 ew-code-editor）嵌入网页并加载初始代码。支持通过 `requestUrl` 加载代码文件，或直接传入 `html/css/js` 代码内容。
 
+**在线演示**：https://eveningwater.github.io/ew-iframe-editor/
+
 ## 安装
 
 ```bash

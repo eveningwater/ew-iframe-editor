@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneCompiler 自定义适配器示例</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    .info { padding: 12px 20px; background: #f5f5f5; border-bottom: 1px solid #ddd; font-size: 14px; }
+    .info code { background: #e0e0e0; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="info">
+    OneCompiler 自定义适配器示例 — 实现 <code>EditorAdapter</code> 接口接入 OneCompiler（支持 110+ 语言）
+  </div>
+
+  <script src="../dist/index.global.js"></script>
+  <script>
+    const { createEditor } = EwIframeEditor;
+
+    /**
+     * OneCompiler 自定义适配器
+     * 文档: https://onecompiler.com/apis/embed-editor
+     *
+     * 注入方式: postMessage
+     * 消息格式: { eventType: 'populateCode', language, files: [{ name, content }] }
+     * URL 需要带上 listenToEvents=true 才能接收消息
+     */
+    function oneCompilerAdapter(language = 'javascript') {
+      return {
+        name: 'onecompiler',
+        usesPostMessage: true,
+
+        getUrl() {
+          return `https://onecompiler.com/embed/${language}?listenToEvents=true&hideNew=true&hideTitle=true`;
+        },
+
+        sendCode(iframe, code) {
+          // OneCompiler 使用单文件 + 语言，这里把 js 作为主文件
+          const content = code.js || code.html || '';
+          iframe.contentWindow?.postMessage({
+            eventType: 'populateCode',
+            language,
+            files: [{ name: `index.${language}`, content }],
+          }, '*');
+        },
+      };
+    }
+
+    // 使用自定义适配器
+    createEditor({
+      adapter: oneCompilerAdapter('javascript'),
+      code: {
+        js: `// OneCompiler 示例 - 点击 Run 运行
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+console.log('Fibonacci(10):', fibonacci(10));`,
+      },
+    });
+  </script>
+</body>
+</html>

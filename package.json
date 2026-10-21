@@ -1,0 +1,57 @@
+{
+  "name": "ew-iframe-editor",
+  "version": "0.0.1",
+  "description": "Embed online code editors into any web page via iframe with initial code loading. Built-in ew-code-editor support, with adapter pattern for custom editor integration.",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js"
+    },
+    "./dist/index.global.js": "./dist/index.global.js",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eveningwater/ew-iframe-editor.git"
+  },
+  "homepage": "https://github.com/eveningwater/ew-iframe-editor#readme",
+  "bugs": "https://github.com/eveningwater/ew-iframe-editor/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "example": "npx serve . -l 5173",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "code-editor",
+    "iframe",
+    "playground",
+    "ew-code-editor",
+    "embed",
+    "adapter",
+    "postmessage",
+    "onecompiler",
+    "jdoodle"
+  ],
+  "author": "eveningwater",
+  "license": "ISC",
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  }
+}

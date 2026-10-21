@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>直接传入代码示例</title>
+</head>
+<body>
+  <script src="../dist/index.global.js"></script>
+  <script>
+    const { createEditor } = EwIframeEditor;
+
+    // 不通过 requestUrl，直接传入代码内容
+    createEditor({
+      code: {
+        html: '<h1 style="color:#007acc">ew-iframe-editor</h1><button id="btn">点击弹出消息</button>',
+        css: 'body { font-family: system-ui; text-align: center; padding: 60px 20px; background: #fafafa; } button { padding: 12px 28px; font-size: 16px; border: none; border-radius: 8px; background: #007acc; color: white; cursor: pointer; } button:hover { background: #005a9e; }',
+        js: 'document.getElementById("btn").addEventListener("click", () => { alert("Hello from ew-iframe-editor!"); });',
+      },
+    });
+  </script>
+</body>
+</html>
